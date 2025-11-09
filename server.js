@@ -9,13 +9,30 @@ app.get('/',(request,respond) => {
 });
 
 app.get("/api/GameData", (request,respond) => {
-	const cakes = [
-		"pink cake", 
-		"blue cake", 
-		"yellow cake", 
-		"purple cake"
+	const data = [
+		{
+			"label": "Aug",
+			"revenue": 9000000, 
+			"gameplay": 937500
+		},{
+			"label": "Sep",
+			"revenue": 15000000,  
+			"gameplay": 1200000
+		},{
+			"label": "Oct",
+			"revenue": 30000000,  
+			"gameplay": 2800000
+		},{
+			"label": "Nov",
+			"revenue": 22000000,  
+			"gameplay": 1800000
+		},{
+			"label": "Dec",
+			"revenue": 45000000,  
+			"gameplay": 3750000
+		}
 	];
-	respond.send(cakes);
+	respond.send(data);
 });
 
 app.listen(3001, () => {
