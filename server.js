@@ -2,7 +2,6 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 app.use(express.static("public"));
-const cors = require("cors");
 app.use(cors({
   origin: ['https://sboakye-uofsc.github.io/statistics-server/', 'http://localhost:3000/statistics-server'] // add your domains
 }));
