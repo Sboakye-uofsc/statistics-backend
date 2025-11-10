@@ -41,7 +41,8 @@ app.get("/api/GameData", (request,respond) => {
 	respond.send(data);
 });
 
-app.get("/api/Review", (request,respond) => {
+app.get("/api/Review/:id", (request,respond) => {
+	const reviewId = parseInt(request.params.id);
 	const reviewData = [
 		{
 			"_id": 1,
@@ -88,7 +89,14 @@ app.get("/api/Review", (request,respond) => {
 			"reviews":["The game is cool. Really like the combat in this game"]
 		}
 	];
-	respond.send(reviewData);
+	
+	const review = reviewData.find(r => r._id === reviewId);
+	
+	if (review) {
+		respond.send(review);
+	} else {
+		respond.status(404).send({ error: "Review not found" });
+	}
 });
 
 
