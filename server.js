@@ -41,61 +41,66 @@ app.get("/api/GameData", (request,respond) => {
 	respond.send(data);
 });
 
+const reviewData = [
+	{
+		"_id": 1,
+		"name_game": "Peak",
+		"released": "2025-16-06",
+		"img": "/img/peak.png",
+		"username": "Unicakes753",
+		"date_respond": "2025-20-09",
+		"description": "Ya'll I really have a obsession with this game",
+		"rating": 5,
+		"reviews":["Since the first time I play this time, I fell in love with it"]
+	},
+	{
+		"_id": 2,
+		"name_game": "Castle Crashers",
+		"released": "2012-26-09",
+		"img": "/img/castle.png",
+		"username": "YOYLL347",
+		"date_respond": "2024-19-05",
+		"description": "This bring me back to the good old days",
+		"rating": 4.5,
+		"reviews":["I remember when this game first came out on my birshday and my mom got it for me as a gift"]
+	},
+	{
+		"_id": 3,
+		"name_game": "Runescape Dragonwilds",
+		"released": "2025-15-04",
+		"img": "/img/dragon.png",
+		"username": "Maical_Moooon",
+		"date_respond": "2025-15-04",
+		"description": "The game is not too bad, I will definitely play with friends",
+		"rating": 4,
+		"reviews":["The game is cool. Really like the combat in this game"]
+	},
+	{
+		"_id": 4,
+		"name_game": "Marvel Rivals",
+		"released": "2024-05-12",
+		"img": "/img/rivals.png",
+		"username": "Rivals_Katch",
+		"date_respond": "2024-09-12",
+		"description": "I will definitely play with friends",
+		"rating": 4.9,
+		"reviews":["The game is cool. Really like the combat in this game"]
+	}
+];
+
+app.get("/api/Review", (request, respond) => {
+	respond.send(reviewData);
+});
+
+
 app.get("/api/Review/:id", (request,respond) => {
 	const reviewId = parseInt(request.params.id);
-	const reviewData = [
-		{
-			"_id": 1,
-			"name_game": "Peak",
-			"released": "2025-16-06",
-			"img": "/img/peak.png",
-			"username": "Unicakes753",
-			"date_respond": "2025-20-09",
-			"description": "Ya'll I really have a obsession with this game",
-			"rating": 5,
-			"reviews":["Since the first time I play this time, I fell in love with it"]
-		},
-		{
-			"_id": 2,
-			"name_game": "Castle Crashers",
-			"released": "2012-26-09",
-			"img": "/img/castle.png",
-			"username": "YOYLL347",
-			"date_respond": "2024-19-05",
-			"description": "This bring me back to the good old days",
-			"rating": 4.5,
-			"reviews":["I remember when this game first came out on my birshday and my mom got it for me as a gift"]
-		},
-		{
-			"_id": 3,
-			"name_game": "Runescape Dragonwilds",
-			"released": "2025-15-04",
-			"img": "/img/dragon.png",
-			"username": "Maical_Moooon",
-			"date_respond": "2025-15-04",
-			"description": "The game is not too bad, I will definitely play with friends",
-			"rating": 4,
-			"reviews":["The game is cool. Really like the combat in this game"]
-		},
-		{
-			"_id": 4,
-			"name_game": "Marvel Rivals",
-			"released": "2024-05-12",
-			"img": "/img/rivals.png",
-			"username": "Rivals_Katch",
-			"date_respond": "2024-09-12",
-			"description": "I will definitely play with friends",
-			"rating": 4.9,
-			"reviews":["The game is cool. Really like the combat in this game"]
-		}
-	];
-	
 	const review = reviewData.find(r => r._id === reviewId);
 	
 	if (review) {
 		respond.send(review);
 	} else {
-		respond.status(404).send({ error: "Review not found" });
+		respond.send({ error: "Review not found" });
 	}
 });
 
