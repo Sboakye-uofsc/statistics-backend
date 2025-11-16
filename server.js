@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const app = express();
+app.use(express.json());
 app.use(express.static("public"));
 app.use(cors({
   origin: [
@@ -88,22 +89,82 @@ const reviewData = [
 	}
 ];
 
+const commentsData = {};
+
+// Get all reviews
 app.get("/api/Review", (request, respond) => {
 	respond.send(reviewData);
 });
 
-
-app.get("/api/Review/:id", (request,respond) => {
+// Get a specific review
+app.get("/api/Review/:id", (request, respond) => {
 	const reviewId = parseInt(request.params.id);
 	const review = reviewData.find(r => r._id === reviewId);
-	
 	if (review) {
 		respond.send(review);
 	} else {
-		respond.send({ error: "Review not found" });
+		respond.status(404).send({ error: "Review not found" });
 	}
 });
 
+// Get comments for a review
+app.get("/api/Review/:id/comments", (request, respond) => {
+	const reviewId = request.params.id;
+	const comments = commentsData[reviewId] || [];
+	respond.send(comments);
+});
+
+// Add a comment to a review
+app.post("/api/Review/:id/comments", (request, respond) => {
+	const reviewId = request.params.id;
+	const newComment = {
+		id: Date.now().toString(),
+		body: request.body.body,
+		username: request.body.username || "Anonymous",
+		userId: request.body.userId,
+		parentId: request.body.parentId || null,
+		createdAt: new Date().toISOString()
+	};
+	
+	if (!commentsData[reviewId]) {
+		commentsData[reviewId] = [];
+	}
+	
+	commentsData[reviewId].push(newComment);
+	respond.send(newComment);
+});
+
+// Update a comment
+app.put("/api/Review/:id/comments/:commentId", (request, respond) => {
+	const reviewId = request.params.id;
+	const commentId = request.params.commentId;
+	const { body } = request.body;
+	
+	if (commentsData[reviewId]) {
+		const comment = commentsData[reviewId].find(c => c.id === commentId);
+		if (comment) {
+			comment.body = body;
+			respond.send(comment);
+		} else {
+			respond.status(404).send({ error: "Comment not found" });
+		}
+	} else {
+		respond.status(404).send({ error: "No comments for this review" });
+	}
+});
+
+// Delete a comment
+app.delete("/api/Review/:id/comments/:commentId", (request, respond) => {
+	const reviewId = request.params.id;
+	const commentId = request.params.commentId;
+	
+	if (commentsData[reviewId]) {
+		commentsData[reviewId] = commentsData[reviewId].filter(c => c.id !== commentId);
+		respond.send({ message: "Comment deleted" });
+	} else {
+		respond.status(404).send({ error: "No comments for this review" });
+	}
+});
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
