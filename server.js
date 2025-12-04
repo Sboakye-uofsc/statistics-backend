@@ -11,6 +11,34 @@ app.use(cors({
   ]
 }));
 
+const mongoose = require("mongoose");
+
+mongoose
+  .connect("mongodb+srv://shanyarock3_db_user:Cupcakes1$@cluster0.7g0yrbw.mongodb.net/gamereviews")
+  .then(() => console.log("Connected to mongodb..."))
+  .catch((err) => console.error("could not connect ot mongodb...", err));
+
+const commentSchema = new mongoose.Schema({
+  reviewId: String,
+  body: String,
+  username: {
+    type: String,
+    default: "Anonymous"
+  },
+  userId: String,
+  parentId: {
+    type: String,
+    default: null
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+const Comment = mongoose.model("Comment", commentSchema);
+
+
 app.get('/',(request,respond) => {
 	respond.sendFile(__dirname + "/index.html");
 });
@@ -89,14 +117,11 @@ const reviewData = [
 	}
 ];
 
-const commentsData = {};
 
-// Get all reviews
 app.get("/api/Review", (request, respond) => {
 	respond.send(reviewData);
 });
 
-// Get a specific review
 app.get("/api/Review/:id", (request, respond) => {
 	const reviewId = parseInt(request.params.id);
 	const review = reviewData.find(r => r._id === reviewId);
@@ -108,61 +133,77 @@ app.get("/api/Review/:id", (request, respond) => {
 });
 
 // Get comments for a review
-app.get("/api/Review/:id/comments", (request, respond) => {
-	const reviewId = request.params.id;
-	const comments = commentsData[reviewId] || [];
-	respond.send(comments);
+app.get("/api/Review/:id/comments", async (request, respond) => {
+	try {
+		const reviewId = request.params.id;
+		const comments = await Comment.find({ reviewId: reviewId });
+		respond.send(comments);
+	} catch (error) {
+		console.error("Error fetching comments:", error);
+		respond.status(500).send({ error: "Failed to fetch comments" });
+	}
 });
 
 // Add a comment to a review
-app.post("/api/Review/:id/comments", (request, respond) => {
-	const reviewId = request.params.id;
-	const newComment = {
-		id: Date.now().toString(),
-		body: request.body.body,
-		username: request.body.username || "Anonymous",
-		userId: request.body.userId,
-		parentId: request.body.parentId || null,
-		createdAt: new Date().toISOString()
-	};
-	
-	if (!commentsData[reviewId]) {
-		commentsData[reviewId] = [];
+app.post("/api/Review/:id/comments", async (request, respond) => {
+	try {
+		const reviewId = request.params.id;
+		
+		// Create new comment document
+		const newComment = new Comment({
+			reviewId: reviewId,
+			body: request.body.body,
+			username: request.body.username || "Anonymous",
+			userId: request.body.userId,
+			parentId: request.body.parentId || null
+		});
+		
+		const savedComment = await newComment.save();
+		respond.send(savedComment);
+	} catch (error) {
+		console.error("Error creating comment:", error);
+		respond.status(500).send({ error: "Failed to create comment" });
 	}
-	
-	commentsData[reviewId].push(newComment);
-	respond.send(newComment);
 });
 
 // Update a comment
-app.put("/api/Review/:id/comments/:commentId", (request, respond) => {
-	const reviewId = request.params.id;
-	const commentId = request.params.commentId;
-	const { body } = request.body;
-	
-	if (commentsData[reviewId]) {
-		const comment = commentsData[reviewId].find(c => c.id === commentId);
-		if (comment) {
-			comment.body = body;
-			respond.send(comment);
+app.put("/api/Review/:id/comments/:commentId", async (request, respond) => {
+	try {
+		const commentId = request.params.commentId;
+		const { body } = request.body;
+		
+		const updatedComment = await Comment.findByIdAndUpdate(
+			commentId,
+			{ body: body },
+			{ new: true } // Returns the updated document
+		);
+		
+		if (updatedComment) {
+			respond.send(updatedComment);
 		} else {
 			respond.status(404).send({ error: "Comment not found" });
 		}
-	} else {
-		respond.status(404).send({ error: "No comments for this review" });
+	} catch (error) {
+		console.error("Error updating comment:", error);
+		respond.status(500).send({ error: "Failed to update comment" });
 	}
 });
 
 // Delete a comment
-app.delete("/api/Review/:id/comments/:commentId", (request, respond) => {
-	const reviewId = request.params.id;
-	const commentId = request.params.commentId;
-	
-	if (commentsData[reviewId]) {
-		commentsData[reviewId] = commentsData[reviewId].filter(c => c.id !== commentId);
-		respond.send({ message: "Comment deleted" });
-	} else {
-		respond.status(404).send({ error: "No comments for this review" });
+app.delete("/api/Review/:id/comments/:commentId", async (request, respond) => {
+	try {
+		const commentId = request.params.commentId;
+		
+		const deletedComment = await Comment.findByIdAndDelete(commentId);
+		
+		if (deletedComment) {
+			respond.send({ message: "Comment deleted" });
+		} else {
+			respond.status(404).send({ error: "Comment not found" });
+		}
+	} catch (error) {
+		console.error("Error deleting comment:", error);
+		respond.status(500).send({ error: "Failed to delete comment" });
 	}
 });
 
