@@ -3,20 +3,28 @@ const cors = require("cors");
 const app = express();
 app.use(express.json());
 app.use(express.static("public"));
+
+// More permissive CORS for development
 app.use(cors({
-  origin: [
+  origin: '*',  // Allow all origins during development
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type']
+}));
+
+/*app.use(cors({
+    origin: [
     'https://sboakye-uofsc.github.io',
     'http://localhost:3000',
     'http://localhost:3001'
   ]
-}));
+})); */
 
 const mongoose = require("mongoose");
 
 mongoose
-  .connect("mongodb+srv://shanyarock3_db_user:Cupcakes1$@cluster0.7g0yrbw.mongodb.net/gamereviews")
+  .connect("mongodb+srv://shanyarock3_db_user:Cupcakes1%24@cluster0.7g0yrbw.mongodb.net/gamereviews")
   .then(() => console.log("Connected to mongodb..."))
-  .catch((err) => console.error("could not connect ot mongodb...", err));
+  .catch((err) => console.error("could not connect to mongodb...", err));
 
 const commentSchema = new mongoose.Schema({
   reviewId: String,
@@ -136,7 +144,9 @@ app.get("/api/Review/:id", (request, respond) => {
 app.get("/api/Review/:id/comments", async (request, respond) => {
 	try {
 		const reviewId = request.params.id;
+		console.log('Fetching comments for review:', reviewId); // Debug log
 		const comments = await Comment.find({ reviewId: reviewId });
+		console.log('Found comments:', comments); // Debug log
 		respond.send(comments);
 	} catch (error) {
 		console.error("Error fetching comments:", error);
@@ -148,6 +158,8 @@ app.get("/api/Review/:id/comments", async (request, respond) => {
 app.post("/api/Review/:id/comments", async (request, respond) => {
 	try {
 		const reviewId = request.params.id;
+		console.log('Creating comment for review:', reviewId); // Debug log
+		console.log('Request body:', request.body); // Debug log
 		
 		// Create new comment document
 		const newComment = new Comment({
@@ -159,6 +171,7 @@ app.post("/api/Review/:id/comments", async (request, respond) => {
 		});
 		
 		const savedComment = await newComment.save();
+		console.log('Comment saved:', savedComment); // Debug log
 		respond.send(savedComment);
 	} catch (error) {
 		console.error("Error creating comment:", error);
@@ -204,6 +217,19 @@ app.delete("/api/Review/:id/comments/:commentId", async (request, respond) => {
 	} catch (error) {
 		console.error("Error deleting comment:", error);
 		respond.status(500).send({ error: "Failed to delete comment" });
+	}
+});
+
+app.get("/api/test-db", async (request, respond) => {
+	try {
+		const isConnected = mongoose.connection.readyState === 1;
+		respond.json({ 
+			connected: isConnected,
+			status: mongoose.connection.readyState,
+			message: isConnected ? "MongoDB connected" : "MongoDB not connected"
+		});
+	} catch (error) {
+		respond.status(500).json({ error: error.message });
 	}
 });
 
